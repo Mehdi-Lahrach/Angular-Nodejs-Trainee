@@ -7,15 +7,15 @@ const Post = require('./models/post'); //importing the post model
 const app = express();
 
 //Jns6#$-ttBS5Ubw password for mongodb account
-mongoose.connect("mongodb+srv://mehdi:IbXWQftVK2n3iMRU@cluster0.ucprsgw.mongodb.net/node-angular?retryWrites=true&w=majority").
+mongoose.connect("mongodb+srv://mehdi:IbXWQftVK2n3iMRU@cluster0.ucprsgw.mongodb.net/node-angular?retryWrites=true&w=majority")
 //connecting to the database
-then(() => {console.log('Connected to database!')})
+.then(() => {console.log('Connected to database!')})
 .catch(() => {console.log('Connection failed!')});
 
 app.use(bodyParser.json()); //middleware to parse the body of the request
 app.use(bodyParser.urlencoded({extended: false})); //middleware to parse the body of the request
 
-app.use((req,res,next)=>{ //middleware to allow cross origin requests
+app.use((req,res,next)=> {//middleware to allow cross origin requests
   res.setHeader("Access-Control-Allow-Origin","*"); //allowing all origins
   res.setHeader("Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"); //allowing headers
@@ -31,32 +31,31 @@ app.post('/api/posts',(req,res,next)=>{ //middleware to handle post requests
     content: req.body.content //getting the content from the request body
   });
 
-  console.log(post); //logging the post to the console
-  post.save(); //saving the post to the database
-
-  res.status(201).json({ //sending the response as json
-    message: 'Post added successfully' //sending a message to the client
-  });
+  post.save() //saving the post to the database;
+    .then(createdPost => { //getting the created post from the database as a response)
+      res.status(201).json({ //sending the response as json
+        message: 'Post added successfully',
+        postId: createdPost._id //sending the id of the created post to the client
+      });
+    });
 });
-
 app.get('/api/posts' ,(req,res ,next)=>{
 
-  const posts = [ //dummy data
-    { id: 'fadf12421l',
-      title: 'First server-side post',
-      content: 'This is coming from the server'
-    },
-    { id: 'ksajflaj132',
-      title : 'Second server-side post',
-      content: 'This is coming from the server'
-    }
-  ];
+  Post.find()
+    .then(documents => { //getting the posts from the database
+      res.status(200).json({  //sending the response as json
+        message: 'Posts fetched successfully!',
+        posts: documents //sending the posts to the client
+      })
+    });
+});
 
-
-  res.json({  //sending the response as json
-    message: 'Posts fetched successfully!',
-    posts: posts
-  })
+app.delete('/api/posts/:_id',(req,res,next)=>{ //middleware to handle delete requests
+  Post.deleteOne({_id: req.params._id}).then(result => { //deleting the post from the database
+    console.log(result); //logging the result to the console
+    res.status(200).json({message: 'Post deleted!'}); //sending the response as json
+  });
+  //console.log(req.params._id); //logging the id to the console
 });
 
 module.exports = app; //exporting the app
